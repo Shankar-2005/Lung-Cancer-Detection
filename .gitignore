@@ -1,0 +1,30 @@
+# Dataset folder
+Dataset/
+
+# Model files
+*.pth
+*.pt
+*.h5
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE folders
+.cursor/
+.vscode/
+
+# Database
+users.db
+
+# Archives
+*.zip
+*.rar
+
+# OS files
+.DS_Store
+Thumbs.db

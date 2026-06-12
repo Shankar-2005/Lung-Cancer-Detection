@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lung Cancer Classification</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:linear-gradient(135deg,#6a5acd,#7f7fff);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.card{
+    width:600px;
+    background:white;
+    padding:40px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1{
+    margin:0;
+    font-size:28px;
+}
+
+.subtitle{
+    color:#666;
+    margin-bottom:30px;
+}
+
+.upload-box{
+    border:2px dashed #9aa4ff;
+    border-radius:12px;
+    padding:40px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.upload-box:hover{
+    background:#f6f7ff;
+}
+
+.upload-icon{
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+button{
+    margin-top:20px;
+    padding:12px 25px;
+    border:none;
+    border-radius:8px;
+    background:#6a5acd;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#5746d4;
+}
+
+.result{
+    margin-top:25px;
+    font-size:18px;
+}
+
+.error{
+    color:#d9534f;
+}
+
+.success{
+    color:#28a745;
+}
+
+.preview{
+    margin-top:20px;
+    max-width:300px;
+    border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>🫁 Lung Cancer Classification</h1>
+<p class="subtitle">Upload a lung CT scan image for AI-powered analysis</p>
+
+<div class="upload-box" onclick="fileInput.click()">
+<div class="upload-icon">📤</div>
+<p>Click to upload or drag and drop</p>
+<p style="font-size:12px;color:#888;">PNG, JPG or JPEG (Max 16MB)</p>
+</div>
+
+<input type="file" id="fileInput" hidden accept="image/*">
+
+<button onclick="analyzeImage()">Analyze Image</button>
+
+<div id="preview"></div>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+let selectedFile=null;
+
+const fileInput=document.getElementById("fileInput");
+const preview=document.getElementById("preview");
+
+fileInput.addEventListener("change",function(){
+    selectedFile=this.files[0];
+
+    const reader=new FileReader();
+
+    reader.onload=function(e){
+        preview.innerHTML=`<img src="${e.target.result}" class="preview">`;
+    }
+
+    reader.readAsDataURL(selectedFile);
+});
+
+async function analyzeImage(){
+
+    if(!selectedFile){
+        alert("Please upload an image first");
+        return;
+    }
+
+    const formData=new FormData();
+    formData.append("file",selectedFile);
+
+    const response=await fetch("/predict",{
+        method:"POST",
+        body:formData
+    });
+
+    const data=await response.json();
+
+    const resultDiv=document.getElementById("result");
+
+    if(data.error){
+        resultDiv.innerHTML=`<p class="error">${data.error}</p>`;
+        return;
+    }
+
+    if(data.predicted_class==="Unknown / Not a lung CT image"){
+        resultDiv.innerHTML=`
+            <p class="error">
+            ⚠ Uploaded image does not appear to be a lung CT scan.
+            Please upload a valid medical image.
+            </p>
+        `;
+        return;
+    }
+
+    resultDiv.innerHTML=`
+        <p class="success"><b>Prediction:</b> ${data.predicted_class}</p>
+        <p><b>Confidence:</b> ${data.confidence.toFixed(2)}%</p>
+    `;
+
+    if(data.annotated_image){
+        preview.innerHTML+=`<img src="${data.annotated_image}" class="preview">`;
+    }
+}
+
+</script>
+
+</body>
+</html>
